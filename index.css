@@ -1,0 +1,92 @@
+body {
+  font: normal 10pt sans-serif;
+  margin: 10vh auto 50vh;
+  max-width: 100ch;
+}
+
+h1,
+h2,
+h3 {
+  padding: 1em 0 0 0;
+}
+
+img {
+  vertical-align: middle;
+}
+
+code {
+  background: whitesmoke;
+}
+
+code.block {
+  border-radius: 1ch;
+  display: block;
+  overflow: auto;
+
+  /* Make `relative` so that `position:absolute` and `overflow:hidden` work on `::before` */
+  position: relative;
+  white-space: pre;
+}
+
+/* Render a makeshift gutter with up to 10 line number */
+code.block::before {
+  --background: silver;
+  --line-height: 1.25em;
+
+  background: var(--background);
+  color: white;
+  content: '1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A +';
+  display: block;
+  height: calc(100% - var(--line-height) * 2);
+  overflow: hidden;
+  margin: var(--line-height);
+  outline: var(--line-height) solid var(--background);
+  position: absolute;
+  white-space: pre;
+}
+
+q {
+  background: snow;
+  display: block;
+  margin-block: 1em;
+  padding: 1ex;
+}
+
+legend {
+  padding-inline: 1ch;
+}
+
+hr {
+  border: none;
+  box-shadow: 0 1px silver;
+  margin: 1em 0;
+  padding: 1px;
+}
+
+a {
+  text-decoration: none;
+}
+
+.b {
+  color: blue;
+}
+
+.m {
+  color: maroon;
+}
+
+.cb {
+  color: cornflowerblue;
+}
+
+.ls {
+  color: lightsalmon;
+}
+
+.do {
+  color: darkorange;
+}
+
+.g {
+  color: green;
+}

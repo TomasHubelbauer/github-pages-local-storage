@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages localStorage</title>
+    <link rel="stylesheet" href="./index.css" />
+    <link rel="icon" href="./icon.png" />
+  </head>
+  <body>
+    <h1>
+      <img src="./icon.png" />
+      GitHub Pages <code>localStorage</code>
+    </h1>
+    <p>
+      When hosting a repositories' websites on GitHub Pages, all of the websites
+      from the same GitHub account will share <code>localStorage</code> among
+      themselves, because <code>localStorage</code> is scoped by the origin
+      (scheme + host name + port):
+    </p>
+    <dl>
+      <dt>
+        <code>localStorage</code>
+      </dt>
+      <dd>
+        <q>
+          The <code>localStorage</code> read-only property of the window
+          interface allows you to access a Storage object for the Document's
+          origin.
+        </q>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage">MDN</a>
+      </dd>
+      <dt>
+        <em>Origin</em>
+      </dt>
+      <dd>
+        <q>
+          Web content's origin is defined by the scheme (protocol), hostname
+          (domain), and port of the URL used to access it.
+        </q>
+        <a href="https://developer.mozilla.org/en-US/docs/Glossary/Origin">MDN</a>
+      </dd>
+    </dl>
+    <p>
+      This poses a challenge in case the account hosts multiple independent apps
+      which all use local storage to persist their device-specific state.
+    </p>
+    <p>
+      <code>localStorage</code> is keyed by a simple string and most apps will
+      opt to use short, plain and descriptive names for these keys; the type of
+      keys that is highly likely to cause a collision when the local storage
+      instance is reused across multiple sites on the same origin.
+    </p>
+    <p>
+      It is possible to work around this by meticulously prefixing (or in some
+      other way distinguishing) the local storage keys by hand.
+      However, this places undue burden on the developer and a mistake could
+      lead to data corruption across multiple sites.
+    </p>
+    <p>
+      I am running into this situation with the many tools I make and store on
+      GitHub and host via GitHub Pages.
+      For this reason, I have decided to develop a <code>localStorage</code>
+      wrapper which automatically prefixes the local storage entries' keys by
+      the URL path name to make them unique across multiple sites on the same
+      origin.
+    </p>
+    <h2>Example</h2>
+    <h3>
+      Without <code>github-pages-local-storage</code>
+    </h3>
+    <h4>#1 <code>https://$user.github.io/$repoA</code></h4>
+    <code class="block">
+      <span class="cb">localStorage</span><span class="ls">.setItem</span><span class="do">(</span><span class="m">'test'</span>, <span class="m">'test'</span><span class="do">)</span>;
+    </code>
+    <h4>#2 <code>https://$user.github.io/$repoB</code></h4>
+    <code class="block">
+      <span class="cb">localStorage</span><span class="ls">.getItem</span><span class="do">(</span><span class="m">'test'</span><span class="do">)</span>;
+      <span class="g">// Prints `'test'` not `null`</span>
+    
+      <span class="cb">localStorage</span><span class="ls">.setItem</span><span class="do">(</span><span class="m">'test'</span>, <span class="m">'test2'</span><span class="do">)</span>;
+    </code>
+    <h4>#3 <code>https://$user.github.io/$repoA</code></h4>
+    <code class="block">
+      <span class="cb">localStorage</span><span class="ls">.getItem</span><span class="do">(</span><span class="m">'test'</span><span class="do">)</span>;
+      <span class="g">// Prints `'test2'` not `test`</span>
+    </code>
+    <p>
+      As is apparent, the two sites on the same origin but different paths
+      pollute each others local storages unintentionally.
+      This can cause subtle bugs.
+    </p>
+    <h3>
+      With <code>github-pages-local-storage</code>
+    </h3>
+    <h4>#1 <code>https://$user.github.io/$repoA</code></h4>
+    <code class="block">
+      <span class="b">import</span> <span class="m">'https://tomashubelbauer.github.io/github-pages-local-storage/index.js'</span>;
+
+      <span class="cb">localStorage</span><span class="ls">.setItem</span><span class="do">(</span><span class="m">'test'</span>, <span class="m">'test'</span><span class="do">)</span>;
+      <span class="g">// Stores `'test'` under the key `$repoA:test`</span>
+    </code>
+    <h4>#2 <code>https://$user.github.io/$repoB</code></h4>
+    <code class="block">
+      <span class="b">import</span> <span class="m">'https://tomashubelbauer.github.io/github-pages-local-storage/index.js'</span>;
+
+      <span class="cb">localStorage</span><span class="ls">.getItem</span><span class="do">(</span><span class="m">'test'</span><span class="do">)</span>;
+      <span class="g">// Prints `null`</span>
+    
+      <span class="cb">localStorage</span><span class="ls">.setItem</span><span class="do">(</span><span class="m">'test'</span>, <span class="m">'test2'</span><span class="do">)</span>;
+      <span class="g">// Stores `'test'` under the key `$repoB:test`</span>
+    </code>
+    <h4>#3 <code>https://$user.github.io/$repoA</code></h4>
+    <code class="block">
+      <span class="b">import</span> <span class="m">'https://tomashubelbauer.github.io/github-pages-local-storage/index.js'</span>;
+
+      <span class="cb">localStorage</span><span class="ls">.getItem</span><span class="do">(</span><span class="m">'test'</span><span class="do">)</span>;
+      <span class="g">// Prints `'test'` as expected</span>
+    </code>
+    <p>
+      Prefixing the local storage keys has effectively solved the problem of
+      the local storage being shared across the same origin unintentionally.
+    </p>
+    <h2>Usage</h2>
+    <p>
+      Add this code at the top of your entry point script:
+      <code class="block">
+        <span class="b">import</span> <span class="m">'https://tomashubelbauer.github.io/github-pages-local-storage/index.js'</span>;
+      </code>
+    </p>
+    <p>
+      Use <code>localStorage</code> as you normally would.
+      Keys will now be prefixed by <code>location.path</code>.
+      You can check this out in action using the form below.
+    </p>
+    <fieldset>
+      <legend>Demo</legend>
+      <p>Specify the key you want to test with:</p>
+      <input id="keyInput" placeholder="Key" value="test" />
+      <p>Write any value to the key:</p>
+      <input id="writeInput" placeholder="Value" />
+      <button id="writeButton">Write</button>
+      <p>Read the value of the key:</p>
+      <button id="readButton">Read</button>
+      <input id="readInput" readonly />
+      <p>Deleting is also taken care of:</p>
+      <button id="deleteButton">Delete</button>
+      <p>
+        Check out the browser developer tools to see the prefixed key by running
+        <code>localStorage</code>. For key <code>test</code> you can expect the
+        key <code>github-pages-local-storage:test</code> to appear in there.
+      </p>
+    </fieldset>
+    <script type="module">
+      import './index.js';
+
+      const keyInput = document.querySelector('#keyInput');
+
+      const writeInput = document.querySelector('#writeInput');
+      writeInput.value = Math.random();
+
+      const writeButton = document.querySelector('#writeButton');
+      writeButton.addEventListener('click', () => {
+        localStorage.setItem(keyInput.value, writeInput.value);
+      });
+
+      const readInput = document.querySelector('#readInput');
+      readInput.value = '';
+
+      const readButton = document.querySelector('#readButton');
+      readButton.addEventListener('click', () => {
+        readInput.value = localStorage.getItem(keyInput.value);
+      });
+
+      const deleteButton = document.querySelector('#deleteButton');
+      deleteButton.addEventListener('click', () => {
+        localStorage.removeItem(keyInput.value);
+      });
+    </script>
+    <h2>Notes</h2>
+    <h3><code>key</code>, <code>length</code>, <code>clear</code> etc.</h3>
+    <p>
+      These methods aren't patched / wrapped yet.
+      I generally don't use them all that much.
+      Once I need them, I will patch them so they work with the scope storage.
+      Let me know if you need these.
+    </p>
+    <h3><code>path</code>-scoping in SPAs vs MPAs</h3>
+    <p>
+      By using `location.path` as the prefix for the local storage keys, the URL
+      path as a whole becomes the scope of the local storage for that site.
+      That means in case of an MPA (multi-page application) with different URLs
+      for each view, a different local storage instance will be presented on
+      each distinct page/URL.
+      This tool is meant for SPAs (single-page applications).
+    </p>
+    <h3><code>file:</code> protocol</h3>
+    <p>
+      When testing the app locally on the <code>file:</code> protocol with the
+      <code>github-pages-local-storage</code> library references, the file's
+      path becomes the scope of the local storage instance.
+    </p>
+    <p>
+      This is related to the above section; it is not going to be a problem for
+      SPAs but will for MPAs. It will also be a problem in case the file ever
+      moves to a new path (i.e.: is moved or renamed).
+    </p>
+    <p>
+      I am not planning on changing the scoping such that it is more friendly to
+      MPAs because that is not my use-case and it is a non-trivial problem to
+      solve while still making sense across both live and <code>file:</code>
+      protocol accesses.
+    </p>
+    <hr />
+    <a href="https://github.com/tomashubelbauer/github-pages-local-storage">
+      GitHub
+    </a>
+  </body>
+</html>
