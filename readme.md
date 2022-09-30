@@ -18,6 +18,10 @@ import 'https://tomashubelbauer.github.io/github-pages-local-storage/index.js';
 // Use `localStorage` as you normally would now
 ```
 
+Note that the `index.js` cannot be referenced directly based on the GitHub URLs
+you see in the browser for normal or even raw mode, because those pages are not
+served with the `text/javascript` MIME type required for ESM.
+
 ## To-Do
 
 ### Patch `key`, `length`, `clear` etc.
